@@ -1,2 +1,29 @@
-# plandepth_age
-Investigating differences in planning depth between young and old adults
+# Planning depth in young and old adults
+Investigating differences in planning depth between young and old adults using a multi stage task and computational model from https://github.com/dimarkov/plandepth
+
+Requirements
+------------
+
+numpy
+pandas
+matplotlib
+seaborn
+pytorch
+pyro
+numpyro
+
+Installation
+------------
+
+The easiest way to install required libraries is using [conda](https://conda.io/miniconda.html)
+and pip package managers.
+
+First setup an environment using anaconda prompt (or just terminal in linux):
+
+```sh
+conda create -n ppl python=3 numpy pandas matplotlib seaborn
+conda activate ppl
+conda install pytorch -c pytorch
+pip install pyro-ppl
+pip install numpyro
+```
