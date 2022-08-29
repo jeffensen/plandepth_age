@@ -1,0 +1,8 @@
+.chglog
+*.pyc
+__pycache__
+*.svg
+*.pdf
+*.png
+*.npz
+.vscode
