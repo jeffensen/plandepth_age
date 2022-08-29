@@ -9,12 +9,19 @@ Created on Sat Feb 15 23:36:20 2020
 import torch
 import numpy as np
 import pandas as pd
-import scipy as sp
 from scipy import io
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from convenience_functions import read_pickle, write_pickle
+
+from pybefit.tasks import SpaceAdventure
+from pybefit.agents import VISAT
+from simulate import Simulator
+
+from local_agents import MFRL
+from simulate import SimulatorMFRL
+
 
 from os import name, getcwd
 reppath = getcwd()
@@ -37,9 +44,6 @@ simnames = []
 resps = []
 
 # prepare environment
-
-from tasks import SpaceAdventure
-
 exp = io.loadmat(reppath + '/experiment/experimental_variables_new.mat')
 starts = exp['startsExp'][:, 0] - 1
 planets = exp['planetsExp'] - 1
@@ -84,10 +88,6 @@ conditions[1, :runs//2] = torch.tensor(trials1, dtype=torch.long)
 conditions[1, runs//2:] = torch.tensor(trials2, dtype=torch.long)
 
 #%% Optimal agents with varying planning depth
-
-from agents import BackInduction
-from simulate import Simulator
-
 simname = 'optimal'
 
 # setup parameters for agent
@@ -99,7 +99,7 @@ trans_par = trans_par.repeat(runs,1)
 
 
 # iterate over different planning depths
-for depth in range(2,-1,-1):
+for depth in range(2, -1, -1):
     
     # define space adventure task with aquired configurations
     # set number of trials to the max number of actions
@@ -111,11 +111,13 @@ for depth in range(2,-1,-1):
                                   trials=3)
     
     # define the optimal agent, each with a different maximal planning depth
-    agent = BackInduction(confs,
-                          runs=runs,
-                          mini_blocks=blocks,
-                          trials=3,
-                          planning_depth=depth+1)
+    agent = VISAT(
+        confs,
+        runs=runs,
+        mini_blocks=blocks,
+        trials=3,
+        planning_depth=depth+1
+    )
     
     agent.set_parameters(trans_par)
     
@@ -147,10 +149,6 @@ for depth in range(2,-1,-1):
 
 
 #%% simulate behavior with Model-free RL Agent
-
-from agents import MFRL
-from simulate import SimulatorMFRL
-
 simname = 'MF-RL'
 
 # # iterate over parameter values to find maximum performance
@@ -216,10 +214,6 @@ simnames.append(simname)
   
 
 #%% agents with random action selection
-
-from agents import BackInduction
-from simulate import Simulator
-
 simname = 'random'
 
 # setup parameters for agent
@@ -239,11 +233,13 @@ space_advent = SpaceAdventure(conditions,
                               trials=3)
 
 # define the optimal agent, each with a different maximal planning depth
-agent = BackInduction(confs,
-                      runs=runs,
-                      mini_blocks=blocks,
-                      trials=3,
-                      planning_depth=depth+1)
+agent = VISAT(
+    confs,
+    runs=runs,
+    mini_blocks=blocks,
+    trials=3,
+    planning_depth=depth+1
+)
 
 agent.set_parameters(trans_par)
 
@@ -274,8 +270,6 @@ simnames.append(simname)
 
 # # dump simulations to disk
 # write_pickle(obj=simulations, relnm='sim_' + simname + '.pckl')    
-
-
 
 #%% store sim data
 sim_data = pd.DataFrame()
@@ -350,8 +344,8 @@ heatmap1_data = pd.pivot_table(sim_data2, values='points',
                      columns='epsilon')
 fig, ax = plt.subplots(figsize=(10,8))
 sns.heatmap(heatmap1_data, ax = ax, cbar_kws={'label': 'final point score'})
-ax.set_xticklabels([str("%.2f" % round(i,2)) for i in epsilons])
-ax.set_yticklabels([str("%.1f" % round(i,2)) for i in alphas])
+# ax.set_xticklabels([str("%.2f" % round(i,2)) for i in epsilons])
+# ax.set_yticklabels([str("%.1f" % round(i,2)) for i in alphas])
 
 fig.savefig('sim_MF-RL-score-heatmap.png', dpi=300)
 fig.savefig('sim_MF-RL-score-heatmap.svg', type="svg")

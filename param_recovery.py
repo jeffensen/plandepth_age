@@ -5,33 +5,20 @@ Created on Mon Aug  1 11:38:42 2022
 
 @author: s7340493
 """
-
-#%% install recommended versions of necessary packages
-# import subprocess
-# import sys
-# def install_pip(package):
-#    subprocess.check_call([sys.executable, "-m", "pip", "install", package]) 
-# def install_conda(package):
-#    subprocess.check_call([sys.executable, "-m", "conda", "install", package]) 
-# install_conda("python=3.9.7")
-# install_conda("numpy")
-# install_conda("pandas")
-# install_conda("matplotlib")
-# install_conda("seaborn")
-# install_conda("pytorch=1.7.1 -c pytorch")
-# install_pip("pyro-ppl==1.5.2")
-# install_pip("numpyro")
-
 #%%
 import torch
 import numpy as np
-import pandas as pd
-import scipy as sp
 from scipy import io
-import matplotlib.pyplot as plt
 import seaborn as sns
 #from convenience_functions import read_pickle, write_pickle
 from os import getcwd
+
+from pybefit.agents import VISAT
+from pybefit.inference import NormalGammaDiscreteDepth
+from pybefit.tasks import SpaceAdventure
+
+from simulate import Simulator
+    
 
 reppath = getcwd()
 
@@ -39,15 +26,14 @@ sns.set(context='talk', style='white')
 sns.set_palette("colorblind", n_colors=5, color_codes=True)
 
 # define true parameter values for simulations as a list of parameter lists [alpha, beta, theta, depth] each configuring one agent.
-#            [a,b  ,t,d]
-simparams = [[0,1  ,0,3],
-             [0,1.5,0,3],
-             [0,2  ,0,3]]
-
-
+# [alpha, beta, theta, depth]
+simparams = [
+    [0, 1, 0, 3],
+    [0, 1.5, 0, 3],
+    [0, 2, 0, 3]
+]
 #%% simulate behavior with different agents:
 
-    
 def simulate_SAT(params=[[0,1e10,0,3]], simruns=100):
     '''simulates space adventure task with agents according to params.
     
@@ -64,11 +50,6 @@ def simulate_SAT(params=[[0,1e10,0,3]], simruns=100):
     performance = []
         
     # prepare environment
-    
-    from tasks import SpaceAdventure
-    from agents import BackInduction
-    from simulate import Simulator
-    
     exp = io.loadmat(reppath + '/experiment/experimental_variables_new.mat')
     starts = exp['startsExp'][:, 0] - 1
     planets = exp['planetsExp'] - 1
@@ -133,11 +114,13 @@ def simulate_SAT(params=[[0,1e10,0,3]], simruns=100):
                                       trials=3)
         
         # define the agent, each with a different maximal planning depth
-        agent = BackInduction(confs,
-                              runs=runs,
-                              mini_blocks=blocks,
-                              trials=3,
-                              planning_depth=depth)
+        agent = VISAT(
+            confs,
+            runs=runs,
+            mini_blocks=blocks,
+            trials=3,
+            planning_depth=depth
+        )
         
         agent.set_parameters(trans_par, true_params=True)
         
@@ -172,13 +155,6 @@ simulations, performance = simulate_SAT(simparams)
 
 #%% infer params from simulations
 
-import sys
-sys.path.append('../')
-
-from agents import BackInduction
-from inference import Inferrer
-
-
 def load_and_format_behavioural_data(sim):
        
     runs = sim.agent.runs  # number of subjects
@@ -199,38 +175,32 @@ def load_and_format_behavioural_data(sim):
 
     return stimuli, mask, responses, conditions, ids
 
-
 def variational_inference(stimuli, mask, responses):
     max_depth = 3
-    runs, mini_blocks, max_trials = responses.shape
+    mini_blocks, max_trials, runs = responses.shape
     
     confs = stimuli['configs']
     
     # define agent
-    agent = BackInduction(confs,
-                          runs=runs,
-                          mini_blocks=mini_blocks,
-                          trials=max_trials,
-                          planning_depth=max_depth)
+    agent = VISAT(
+        confs,
+        runs=runs,
+        mini_blocks=mini_blocks,
+        trials=max_trials,
+        planning_depth=max_depth
+    )
 
     # load inference module and start model fitting
-    infer = Inferrer(agent, stimuli, responses, mask)
-    infer.fit(num_iterations=600)
+    infer = NormalGammaDiscreteDepth(agent, stimuli, responses, mask)
+    infer.infer_posterior(iter_steps=2000, num_particles=10)
     
     return infer
 
-
 def format_posterior_samples(infer):
-    labels = [r'$\tilde{\beta}$', r'$\theta$', r'$\tilde{\alpha}$']
-    pars_df, mg_df, sg_df = infer.sample_from_posterior(labels)
+    labels = [r'$\beta$', r'$\theta$', r'$\alpha$']
+    _, pars_df, mg_df, sg_df = infer.sample_from_posterior(labels)
 
-    # transform sampled parameter values to the true parameter range
-    pars_df[r'$\beta$'] = torch.from_numpy(pars_df[r'$\tilde{\beta}$'].values).exp().numpy()
-    pars_df[r'$\alpha$'] = torch.from_numpy(pars_df[r'$\tilde{\alpha}$'].values).sigmoid().numpy()
-
-    pars_df.drop([r'$\tilde{\beta}$', r'$\tilde{\alpha}$'], axis=1, inplace=True)
-    return pars_df.melt(id_vars=['subject', 'order'], var_name='parameter')
-
+    return pars_df.melt(id_vars=['subject'], var_name='parameter')
 
 def get_posterior_stats(post_marg, mini_blocks=100):
     n_samples, runs, max_trials = post_marg['d_0_0'].shape
@@ -247,7 +217,6 @@ def get_posterior_stats(post_marg, mini_blocks=100):
     
     return post_depth, m_prob
 
-
 def infer_from_simulation(sim):
     '''infers model params from Simulator object'''
 
@@ -255,8 +224,12 @@ def infer_from_simulation(sim):
     stimuli, mask, responses, conditions, ids = load_and_format_behavioural_data(sim)
 
     # Variational inference
-    infer = variational_inference(stimuli, mask, responses)
+    infer = variational_inference(stimuli, mask, responses.permute(2, 1, 0))
     pars_df = format_posterior_samples(infer)
+
+    max_trials = conditions[-1, :, 0]
+    order = (max_trials == 3) + 1
+    pars_df['order'] = order[pars_df.subject - 1]
     
     n_samples = 100
     post_marg = infer.sample_posterior_marginal(n_samples=n_samples)

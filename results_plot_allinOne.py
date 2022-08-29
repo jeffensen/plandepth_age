@@ -7,7 +7,6 @@ Created on Sat Sep 26 17:30:41 2020
 
 import matplotlib.pyplot as plt
 from os import name, getcwd
-import sys
 import pandas as pd
 import seaborn as sns
 
