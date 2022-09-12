@@ -1,0 +1,38 @@
+﻿Information on Cognitive Covariate Tasks
+-------------------------------------------
+
+1. IDP
+-------
+- N=46 items (excl. 3 initial training items with feedback, where reponses are not stored)
+- Time limit of ~74 seconds -> can lead to lead the last response not beeing counted as time was up (RESP is set to 0 automatically but RT is still stored!)
+- Responses with RT < 150 ms are excluded (this dataset: 0 trials)
+= Processing Speed Criterion: Number of correct responses (RESP_CORR)
+=> Processing Speed Performance Score: IDP_PER = RESP_CORR / 46
+
+2. SAW
+--------
+- N=35 items
+- no time limit
+- Responses with RT < 150 ms are excluded (this dataset: 1 trial, ID:20100252, trial35, 14ms)
+= Crystaline Intelligence Criterion: number of correct responses (RESP_CORR)
+=> Crystaline Intelligence Performance Score: SAW_PER = RESP_CORR / 35
+
+3. SWM
+-------
+- N=96 items (plus 4 training items, which are stored at beginning of logfile, but should be excluded from further analysis!)
+- N=68 Q2-items (trials, where correct response for Q1 would be YES)
+- Responses with RT < 150 ms are excluded (this dataset for RT1: 1 trial, ID:00087, trial37, RT1=9ms)
+
+- 4 or 7 items to memorise and recall in one trial (Varying Sequence length, blocks à 24 trials, b1&b4 4 items, b2&b3 7 items)
+- SWM = spatial location memory (1st response) Q1: "War die Position in der Sequence dabei?"
+- SER = serial order memory (2nd response)     Q2: "War die Position in der Sequence an Stelle XY?"
+	-> Q2 is only presented, if Q1-response was YES
+	-> If Q1-response was false positive, Q2 is presented anyway, RT2 is stored, but for CORR2 the value -999 is stored
+- Time limit for Q1 and Q2 togehter is ~5 seconds
+- Responses with RT < 150 ms are excluded 
+- RT composite value:
+	-> (SUM(Q1_RTs) * Q1_nb_resp + SUM(Q2_RTs) * Q2_nb_resp) np_resp_total     | !! Q2_RTs after Q1-false-positive are excluded here!!
+=> Composite Performance Score:
+	-> (SWM_nbCorr + SER_nbCorr) / (nb_Q1_items + nb_Q2_items)               | Total number of items = maximum possible number of correct response = 96 + 68 = 164
+==> this dataset: 14 out of 52 participants did not even once answer Q2 correctly (SER_RESP_CORR = 0) ==> therefore, only Q1 is analyzed
+==> Spatial Working Memory Performance Score: SWM_PER = SWM_CORR / 96
