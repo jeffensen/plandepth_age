@@ -1,53 +1,141 @@
 ﻿* Encoding: UTF-8.
-CD 'P:\10129\Abschlussarbeiten\JSteffen_Masterarbeit\publication\Suppl_Files\data'.
 
-GET  FILE= 'SAT_subjectLevel_and_cognTasks.sav'
-    /KEEP  Age Sex Group SAT_PER RT_1st_choice MeanPD_1st_choice Model_alpha Model_beta Model_theta IDP_PER SWM_PER SAW_PER SAW_RT SWM_RT IDP_RT.
-DATASET NAME Paper_Subjects WINDOW=FRONT.
+*** replace with path to repository on your machine
 
-GET  FILE= 'SAT_conditionLevel_with_covariates.sav'
-    /KEEP  Subject_ID Group noise steps MeanPD.
-DATASET NAME Paper_SAT_Conditions WINDOW=FRONT.
-
-DATASET ACTIVATE Paper_Subjects.
+CD 'C:\Users\...[ADD PATH TO REPOSITORY]'.
 
 
-*** Correlations.
+*** load subject-level CSV data
 
-CORRELATIONS
-  /VARIABLES=Group IDP_PER SWM_PER SAW_PER SAT_PER  RT_1st_choice MeanPD_1st_choice Model_alpha Model_beta Model_theta
-  /PRINT=TWOTAIL NOSIG FULL
-  /MISSING=PAIRWISE.
+PRESERVE.
+SET DECIMAL DOT.
+
+GET DATA  /TYPE=TXT
+  /FILE="SAT_subjectLevel.csv"
+  /ENCODING='UTF8'
+  /DELIMITERS=","
+  /ARRANGEMENT=DELIMITED
+  /FIRSTCASE=2
+  /DATATYPEMIN PERCENTAGE=95.0
+  /VARIABLES=
+  V1 2X
+  ID A8
+  age F3
+  gender F1
+  group F1
+  IDP_PER F10.2
+  IDP_ACC F10.2
+  IDP_RT F10.2
+  IDP_RT_SD F10.2
+  SAW_PER F10.2
+  SAW_ACC F10.2
+  SAW_RT F10.2
+  SAW_RT_SD F10.2
+  SWM_PER F10.2
+  SWM_ACC F10.2
+  SWM_RT F10.2
+  SWM_RT_SD F10.2
+  SAT_RT F10.2
+  MeanPD F10.3
+  SAT_Total_points F5.0
+  SAT_PER F10.2
+  subject 4X
+  order F3
+  model_alpha F10.3
+  model_beta F10.3
+  model_theta F10.3
+  /MAP.
+RESTORE.
+CACHE.
+EXECUTE.
+DATASET NAME SAT_subjectLevel WINDOW=FRONT.
+
+ADD VALUE LABELS group 0'YA' 1'OA'.
+ADD VALUE LABELS gender 0'male' 1'female'.
+ADD VALUE LABELS order 1'normal' 2'reversed'.
+
+VARIABLE LABELS 
+    IDP_PER 'IDP_PER (%)' IDP_RT 'IDP_RT (s)' IDP_RT_SD 'IDP_RT_SD (s)' 
+    SAW_PER 'SAW_PER (%)' SAW_RT 'SAW_RT (s)' SAW_RT_SD 'SAW_RT_SD (s)' 
+    SWM_PER 'SWM_PER (%)' SWM_RT 'SWM_RT (s)' SWM_RT_SD 'SWM_RT_SD (s)' 
+    SAT_PER 'SAT_PER (%)' SAT_RT 'SAT_RT (s)' MeanPD 'Mean Planning Depth'.
 
 
-*** model quality linear regression.
-
-REGRESSION
-  /DESCRIPTIVES MEAN STDDEV CORR SIG N
-  /MISSING LISTWISE
-  /STATISTICS COEFF OUTS CI(95) R ANOVA COLLIN TOL CHANGE ZPP
-  /CRITERIA=PIN(.05) POUT(.10)
-  /NOORIGIN 
-  /DEPENDENT SAT_PER
-  /METHOD=BACKWARD Model_alpha Model_beta Model_theta MeanPD_1st_choice.
+SAVE OUTFILE='SAT_subjectLevel.sav'
+  /COMPRESSED.
 
 
-*** linear regression MeanPD.
+*** load condition-level CSV data
+    
+PRESERVE.
+SET DECIMAL DOT.
 
-REGRESSION
-  /DESCRIPTIVES MEAN STDDEV CORR SIG N
-  /MISSING LISTWISE
-  /STATISTICS COEFF OUTS CI(95) R ANOVA COLLIN TOL CHANGE ZPP
-  /CRITERIA=PIN(.05) POUT(.10)
-  /NOORIGIN 
-  /DEPENDENT MeanPD_1st_choice
-  /METHOD=BACKWARD Group RT_1st_choice  IDP_PER SWM_PER.
+GET DATA  /TYPE=TXT
+  /FILE="SAT_conditionLevel.csv"
+  /ENCODING='UTF8'
+  /DELIMITERS=","
+  /ARRANGEMENT=DELIMITED
+  /FIRSTCASE=2
+  /DATATYPEMIN PERCENTAGE=95.0
+  /VARIABLES=
+  V1 2X
+  ID A8
+  noise F1
+  steps F1
+  age F3
+  gender F1
+  group F1
+  IDP_PER F10.2
+  IDP_ACC F10.2
+  IDP_RT F10.2
+  IDP_RT_SD F10.2
+  SAW_PER F10.2
+  SAW_ACC F10.2
+  SAW_RT F10.2
+  SAW_RT_SD F10.2
+  SWM_PER F10.2
+  SWM_ACC F10.2
+  SWM_RT F10.2
+  SWM_RT_SD F10.2
+  SAT_RT F10.2
+  MeanPD F10.3
+  SAT_Total_points F5.0
+  SAT_PER F10.2
+  subject 4X
+  order F3
+  model_alpha F10.3
+  model_beta F10.3
+  model_theta F10.3
+  /MAP.
+RESTORE.
+CACHE.
+EXECUTE.
+DATASET NAME SAT_conditionLevel WINDOW=FRONT.
+
+COMPUTE steps=steps - 2. /* dummy-code steps variable.
+EXECUTE.
+
+ADD VALUE LABELS noise 0'low noise' 1'high noise'.
+ADD VALUE LABELS steps 0'2 steps' 1'3 steps'.
+ADD VALUE LABELS group 0'YA' 1'OA'.
+ADD VALUE LABELS gender 0'male' 1'female'.
+ADD VALUE LABELS order 1'normal' 2'reversed'.
+
+VARIABLE LABELS 
+    IDP_PER 'IDP_PER (%)' IDP_RT 'IDP_RT (s)' IDP_RT_SD 'IDP_RT_SD (s)' 
+    SAW_PER 'SAW_PER (%)' SAW_RT 'SAW_RT (s)' SAW_RT_SD 'SAW_RT_SD (s)' 
+    SWM_PER 'SWM_PER (%)' SWM_RT 'SWM_RT (s)' SWM_RT_SD 'SWM_RT_SD (s)' 
+    SAT_PER 'SAT_PER (%)' SAT_RT 'SAT_RT (s)' MeanPD 'Mean Planning Depth'.
+
+SAVE OUTFILE='SAT_conditionLevel.sav'
+  /COMPRESSED.
 
 
 *** group comparison gender.
 
+DATASET ACTIVATE SAT_subjectLevel.
 CROSSTABS
-  /TABLES=Group BY Sex
+  /TABLES=group BY gender
   /FORMAT=AVALUE TABLES
   /STATISTICS=CHISQ 
   /CELLS=COUNT
@@ -56,86 +144,233 @@ CROSSTABS
 
 *** group comparisons standard t-test.
 
-T-TEST GROUPS=Group(0 1)
+DATASET ACTIVATE SAT_subjectLevel.
+T-TEST groupS=group(0 1)
   /MISSING=ANALYSIS
-  /VARIABLES=MeanPD_1st_choice Model_alpha Model_beta Model_theta SAT_PER SAW_PER SWM_PER IDP_PER RT_1st_choice SAW_RT SWM_RT IDP_RT
+  /VARIABLES=MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER IDP_PER SAT_RT SAW_RT SWM_RT IDP_RT
   /ES DISPLAY(TRUE)
   /CRITERIA=CI(.95).
-
 
 *** group comparisons bootstrap.
     
+DATASET ACTIVATE SAT_subjectLevel.
 BOOTSTRAP
   /SAMPLING METHOD=SIMPLE
-  /VARIABLES TARGET=MeanPD_1st_choice Model_alpha Model_beta Model_theta SAT_PER SAW_PER SWM_PER RT_1st_choice SAW_RT SWM_RT IDP_RT
-    IDP_PER INPUT=Group 
+  /VARIABLES TARGET=MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER SAT_RT SAW_RT SWM_RT IDP_RT
+    IDP_PER INPUT=group 
   /CRITERIA CILEVEL=95 CITYPE=BCA  NSAMPLES=10000
   /MISSING USERMISSING=EXCLUDE.
-T-TEST GROUPS=Group(0 1)
+T-TEST groupS=group(0 1)
   /MISSING=ANALYSIS
-  /VARIABLES=MeanPD_1st_choice Model_alpha Model_beta Model_theta SAT_PER SAW_PER SWM_PER IDP_PER RT_1st_choice SAW_RT SWM_RT IDP_RT
+  /VARIABLES=MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER IDP_PER SAT_RT SAW_RT SWM_RT IDP_RT
   /ES DISPLAY(TRUE)
   /CRITERIA=CI(.95).
 
 
-*** lme model1 of MeanPD.
+*** Correlations.
 
-DATASET ACTIVATE Paper_SAT_Conditions.
-MIXED MeanPD WITH Group noise steps
-  /CRITERIA=DFMETHOD(SATTERTHWAITE) CIN(95) MXITER(100) MXSTEP(10) SCORING(1) 
-    SINGULAR(0.000000000001) HCONVERGE(0, ABSOLUTE) LCONVERGE(0, ABSOLUTE) PCONVERGE(0.000001, ABSOLUTE)    
-  /FIXED=Group noise steps | SSTYPE(3)
-  /METHOD=ML
-  /PRINT=CORB  SOLUTION TESTCOV
-  /RANDOM=INTERCEPT noise steps | SUBJECT(Subject_ID) COVTYPE(VC)
-  /SAVE=PRED RESID.
+DATASET ACTIVATE SAT_subjectLevel.
+CORRELATIONS
+  /VARIABLES=group IDP_PER SWM_PER SAW_PER SAT_PER  SAT_RT MeanPD model_alpha model_beta model_theta
+  /PRINT=TWOTAIL NOSIG FULL
+  /MISSING=PAIRWISE.
 
-*** lme model2 of MeanPD incl. group*steps and group*noise interactions.
-MIXED MeanPD WITH Group noise steps
+
+
+*** model quality linear regression.
+
+DATASET ACTIVATE SAT_subjectLevel.
+REGRESSION
+  /DESCRIPTIVES MEAN STDDEV CORR SIG N
+  /MISSING LISTWISE
+  /STATISTICS COEFF OUTS CI(95) R ANOVA COLLIN TOL CHANGE ZPP
+  /CRITERIA=PIN(.05) POUT(.10)
+  /NOORIGIN 
+  /DEPENDENT SAT_PER
+  /METHOD=ENTER model_alpha model_beta model_theta MeanPD
+    /SAVE = PRED(LMQ_PRED) RESID(LMQ_RESID).
+FORMATS LMQ_PRED(F10.2) LMQ_RESID(F10.2).
+
+*** PLOT: model quality linear regression model residuals.
+
+DATASET ACTIVATE SAT_subjectLevel.
+GGRAPH
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LMQ_PRED LMQ_RESID MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHSPEC SOURCE=INLINE
+  /FITLINE TOTAL=NO SUBgroup=NO
+  /FRAME OUTER=NO INNER=NO
+  /GRIDLINES XAXIS=NO YAXIS=NO
+  /STYLE GRADIENT=NO.
+BEGIN GPL
+  SOURCE: s=userSource(id("graphdataset"))
+  DATA: LMQ_PRED=col(source(s), name("LMQ_PRED"))
+  DATA: LMQ_RESID=col(source(s), name("LMQ_RESID"))
+  GUIDE: axis(dim(1), label("Predicted Values"))
+  GUIDE: axis(dim(2), label("Residuals"))
+  GUIDE: form.line(position(*,0))
+  ELEMENT: point(position(LMQ_PRED*LMQ_RESID))
+END GPL.
+
+*** PLOT: MeanPD linear regression model historgram residuals.
+
+DATASET ACTIVATE SAT_subjectLevel.
+GGRAPH
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LMQ_RESID MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHSPEC SOURCE=INLINE
+  /FRAME OUTER=NO INNER=NO
+  /GRIDLINES XAXIS=NO YAXIS=NO
+  /STYLE GRADIENT=NO.
+BEGIN GPL
+  SOURCE: s=userSource(id("graphdataset"))
+  DATA: LMQ_RESID=col(source(s), name("LMQ_RESID"))
+  GUIDE: axis(dim(1), label("Residuals"))
+  GUIDE: axis(dim(2), label("Frequency"))
+  ELEMENT: interval(position(summary.count(bin.rect(LMQ_RESID))), shape.interior(shape.square))
+  ELEMENT: line(position(density.normal(LMQ_RESID)))
+END GPL.
+
+*** PLOT: MeanPD linear regression model Q-Q plot.
+
+DATASET ACTIVATE SAT_subjectLevel.
+PPLOT
+  /VARIABLES=LMQ_RESID
+  /NOLOG
+  /NOSTANDARDIZE
+  /TYPE=Q-Q
+  /FRACTION=BLOM
+  /TIES=MEAN
+  /DIST=NORMAL.
+
+
+
+
+*** linear regression MeanPD.
+
+DATASET ACTIVATE SAT_subjectLevel.
+REGRESSION
+  /DESCRIPTIVES MEAN STDDEV CORR SIG N
+  /MISSING LISTWISE
+  /STATISTICS COEFF OUTS CI(95) R ANOVA COLLIN TOL CHANGE ZPP
+  /CRITERIA=PIN(.05) POUT(.10)
+  /NOORIGIN 
+  /DEPENDENT MeanPD
+  /METHOD=BACKWARD group SAT_RT  IDP_PER SWM_PER
+  /SAVE = PRED(LMQ_PRED) RESID(LMQ_RESID).
+FORMATS LMQ_PRED(F10.2) LMQ_RESID(F10.2).
+
+*** PLOT: MeanPD linear regression model residuals.
+
+DATASET ACTIVATE SAT_subjectLevel.
+GGRAPH
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LMQ_PRED LMQ_RESID MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHSPEC SOURCE=INLINE
+  /FITLINE TOTAL=NO SUBgroup=NO
+  /FRAME OUTER=NO INNER=NO
+  /GRIDLINES XAXIS=NO YAXIS=NO
+  /STYLE GRADIENT=NO.
+BEGIN GPL
+  SOURCE: s=userSource(id("graphdataset"))
+  DATA: LMQ_PRED=col(source(s), name("LMQ_PRED"))
+  DATA: LMQ_RESID=col(source(s), name("LMQ_RESID"))
+  GUIDE: axis(dim(1), label("Predicted Values"))
+  GUIDE: axis(dim(2), label("Residuals"))
+  GUIDE: form.line(position(*,0))
+  ELEMENT: point(position(LMQ_PRED*LMQ_RESID))
+END GPL.
+
+*** PLOT: MeanPD linear regression model historgram residuals.
+
+DATASET ACTIVATE SAT_subjectLevel.
+GGRAPH
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LMQ_RESID MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHSPEC SOURCE=INLINE
+  /FRAME OUTER=NO INNER=NO
+  /GRIDLINES XAXIS=NO YAXIS=NO
+  /STYLE GRADIENT=NO.
+BEGIN GPL
+  SOURCE: s=userSource(id("graphdataset"))
+  DATA: LMQ_RESID=col(source(s), name("LMQ_RESID"))
+  GUIDE: axis(dim(1), label("Residuals"))
+  GUIDE: axis(dim(2), label("Frequency"))
+  ELEMENT: interval(position(summary.count(bin.rect(LMQ_RESID))), shape.interior(shape.square))
+  ELEMENT: line(position(density.normal(LMQ_RESID)))
+END GPL.
+
+*** PLOT: MeanPD linear regression model Q-Q plot.
+
+DATASET ACTIVATE SAT_subjectLevel.
+PPLOT
+  /VARIABLES=LMQ_RESID
+  /NOLOG
+  /NOSTANDARDIZE
+  /TYPE=Q-Q
+  /FRACTION=BLOM
+  /TIES=MEAN
+  /DIST=NORMAL.
+
+
+
+
+
+
+*** lme model of MeanPD incl. group*steps and group*noise interactions.
+
+DATASET ACTIVATE SAT_conditionLevel.
+MIXED MeanPD WITH group noise steps
   /CRITERIA=DFMETHOD(SATTERTHWAITE) CIN(95) MXITER(100) MXSTEP(100) SCORING(10) 
     SINGULAR(0.0000000001) HCONVERGE(0.001, ABSOLUTE) LCONVERGE(0, ABSOLUTE) PCONVERGE(0.00001, 
     ABSOLUTE)
-  /FIXED=Group noise steps Group*noise Group*steps | SSTYPE(3)
+  /FIXED=group noise steps group*noise group*steps | SSTYPE(3)
   /METHOD=ML
   /PRINT=CORB  SOLUTION TESTCOV
-  /RANDOM=INTERCEPT noise steps | SUBJECT(Subject_ID) COVTYPE(VC).
+  /RANDOM=INTERCEPT noise steps | SUBJECT(ID) COVTYPE(VC)
+  /SAVE = PRED(LME_PRED) RESID(LME_RESID).
+FORMATS LME_PRED(F10.2) LME_RESID(F10.2). 
 
 
-*** PLOT: lme model1 residuals.
+*** PLOT: lme model residuals.
+
+DATASET ACTIVATE SAT_conditionLevel.
 GGRAPH
-  /GRAPHDATASET NAME="graphdataset" VARIABLES=PRED_1 RESID_1 MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LME_PRED LME_RESID MISSING=LISTWISE REPORTMISSING=NO
   /GRAPHSPEC SOURCE=INLINE
-  /FITLINE TOTAL=NO SUBGROUP=NO
+  /FITLINE TOTAL=NO SUBgroup=NO
   /FRAME OUTER=NO INNER=NO
   /GRIDLINES XAXIS=NO YAXIS=NO
   /STYLE GRADIENT=NO.
 BEGIN GPL
   SOURCE: s=userSource(id("graphdataset"))
-  DATA: PRED_1=col(source(s), name("PRED_1"))
-  DATA: RESID_1=col(source(s), name("RESID_1"))
+  DATA: LME_PRED=col(source(s), name("LME_PRED"))
+  DATA: LME_RESID=col(source(s), name("LME_RESID"))
   GUIDE: axis(dim(1), label("Predicted Values"))
   GUIDE: axis(dim(2), label("Residuals"))
-  ELEMENT: point(position(PRED_1*RESID_1))
+  GUIDE: form.line(position(*,0))
+  ELEMENT: point(position(LME_PRED*LME_RESID))
 END GPL.
 
-*** PLOT: lme model1 historgram residuals.
+*** PLOT: lme model historgram residuals.
+
+DATASET ACTIVATE SAT_conditionLevel.
 GGRAPH
-  /GRAPHDATASET NAME="graphdataset" VARIABLES=RESID_1 MISSING=LISTWISE REPORTMISSING=NO
+  /GRAPHDATASET NAME="graphdataset" VARIABLES=LME_RESID MISSING=LISTWISE REPORTMISSING=NO
   /GRAPHSPEC SOURCE=INLINE
   /FRAME OUTER=NO INNER=NO
   /GRIDLINES XAXIS=NO YAXIS=NO
   /STYLE GRADIENT=NO.
 BEGIN GPL
   SOURCE: s=userSource(id("graphdataset"))
-  DATA: RESID_1=col(source(s), name("RESID_1"))
+  DATA: LME_RESID=col(source(s), name("LME_RESID"))
   GUIDE: axis(dim(1), label("Residuals"))
   GUIDE: axis(dim(2), label("Frequency"))
-  ELEMENT: interval(position(summary.count(bin.rect(RESID_1))), shape.interior(shape.square))
+  ELEMENT: interval(position(summary.count(bin.rect(LME_RESID))), shape.interior(shape.square))
+  ELEMENT: line(position(density.normal(LME_RESID)))
 END GPL.
 
-*** PLOT: lme model1 Q-Q plot.
+*** PLOT: lme model Q-Q plot.
+
+DATASET ACTIVATE SAT_conditionLevel.
 PPLOT
-  /VARIABLES=RESID_1
+  /VARIABLES=LME_RESID
   /NOLOG
   /NOSTANDARDIZE
   /TYPE=Q-Q
