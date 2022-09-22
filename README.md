@@ -20,11 +20,9 @@ Usage
 ------------
 Running the following scripts performs model based data analysis and generates relevant figures:
 
-1.  fit_behavior.py 
-    ...performs the inference of model parameters from Space Adventure Task raw data.
-2.  create_analysis_datasets.py
-    ...merges inference results and raw data of all tasks into .CSV files.
-3.  results_plot_allinOne.py
-    ...generates main results plot from .CSV dataset.
-4.  data_analysis.sps
-    ...performs all statistical analyses and generates regression plots.
+| Script  | Description |
+| ------------- | ------------- |
+| 1.  fit_behavior.py  | ...performs the inference of model parameters from Space Adventure Task raw data.  |
+| 2.  create_analysis_datasets.py  | ...merges inference results and raw data of all tasks into .CSV files.  |
+| 3.  results_plot_allinOne.py  | ...generates main results plot from .CSV dataset.  |
+| 4.  data_analysis.sps  | ...performs all statistical analyses and generates regression plots.  |
