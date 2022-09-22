@@ -18,6 +18,13 @@ can install the package either using poetry or anaconda package menager.
 
 Usage
 ------------
-Running the following scripts performs model based data analysis and generates relevant figures
+Running the following scripts performs model based data analysis and generates relevant figures:
 
-[NOTE: description here]
+1.  fit_behavior.py 
+    ...performs the inference of model parameters from Space Adventure Task raw data.
+2.  create_analysis_datasets.py
+    ...merges inference results and raw data of all tasks into .CSV files.
+3.  results_plot_allinOne.py
+    ...generates main results plot from .CSV dataset.
+4.  data_analysis.sps
+    ...performs all statistical analyses and generates regression plots.
