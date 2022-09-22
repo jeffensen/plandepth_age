@@ -5,5 +5,4 @@ __pycache__
 *.svg
 *.pdf
 *.png
-*.npz
 .vscode
