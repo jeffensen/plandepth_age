@@ -151,20 +151,14 @@ T-TEST groupS=group(0 1)
   /ES DISPLAY(TRUE)
   /CRITERIA=CI(.95).
 
-*** group comparisons bootstrap.
+
+*** group comparisons non-parametric Mann-Whitney U.
     
 DATASET ACTIVATE SAT_subjectLevel.
-BOOTSTRAP
-  /SAMPLING METHOD=SIMPLE
-  /VARIABLES TARGET=MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER SAT_RT SAW_RT SWM_RT IDP_RT
-    IDP_PER INPUT=group 
-  /CRITERIA CILEVEL=95 CITYPE=BCA  NSAMPLES=10000
-  /MISSING USERMISSING=EXCLUDE.
-T-TEST groupS=group(0 1)
-  /MISSING=ANALYSIS
-  /VARIABLES=MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER IDP_PER SAT_RT SAW_RT SWM_RT IDP_RT
-  /ES DISPLAY(TRUE)
-  /CRITERIA=CI(.95).
+NPAR TESTS
+  /M-W= MeanPD model_alpha model_beta model_theta SAT_PER SAW_PER SWM_PER SAT_RT SAW_RT SWM_RT IDP_RT
+    IDP_PER BY group(0 1)
+  /MISSING ANALYSIS.
 
 
 *** Correlations.
@@ -307,7 +301,6 @@ PPLOT
   /FRACTION=BLOM
   /TIES=MEAN
   /DIST=NORMAL.
-
 
 
 
