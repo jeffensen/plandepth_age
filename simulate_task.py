@@ -44,14 +44,14 @@ simnames = []
 resps = []
 
 # prepare environment
-exp = io.loadmat(reppath + '/experiment/experimental_variables_new.mat')
+exp = io.loadmat(reppath + '/experimental_variables_new.mat')
 starts = exp['startsExp'][:, 0] - 1
 planets = exp['planetsExp'] - 1
 vect = np.eye(5)[planets]
 
 # setup parameters for the task environment
 blocks = 100 # nr of mini-blocks
-runs = 1000  # nr of simulation runs
+runs = 10000 # nr of simulation runs
 ns = 6       # nr of possible states
 no = 5       # nr of planet types
 na = 2       # nr of actions
@@ -99,7 +99,7 @@ trans_par = trans_par.repeat(runs,1)
 
 
 # iterate over different planning depths
-for depth in range(2, -1, -1):
+for depth in range(3):
     
     # define space adventure task with aquired configurations
     # set number of trials to the max number of actions
@@ -119,7 +119,7 @@ for depth in range(2, -1, -1):
         planning_depth=depth+1
     )
     
-    agent.set_parameters(trans_par)
+    agent.set_parameters(trans_par, true_params=True)
     
     # simulate experiment
     sim = Simulator(space_advent, 
