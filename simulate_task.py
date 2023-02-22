@@ -19,10 +19,6 @@ from pybefit.tasks import SpaceAdventure
 from pybefit.agents import VISAT
 from simulate import Simulator
 
-from local_agents import MFRL
-from simulate import SimulatorMFRL
-
-
 from os import name, getcwd
 reppath = getcwd()
 
@@ -148,68 +144,6 @@ for depth in range(3):
 # write_pickle(obj=simulations, relnm='sim_' + simname + '.pckl')
 
 
-#%% simulate behavior with Model-free RL Agent
-simname = 'MF-RL'
-
-# # iterate over parameter values to find maximum performance
-# alphas = np.arange(0,1,0.1).tolist()
-# epsilons = np.arange(0,0.5,0.05).tolist()
-
-# for alpha in alphas:
-#     for epsilon in epsilons:
-            
-# setup parameters for agent
-alpha = 0.5
-epsilon = 0.3
-pars = torch.tensor([alpha, epsilon], dtype=torch.float)
-pars = pars.repeat(runs,1)
-
-agentname = simname + "_a-" + str(alpha) + "_e-" + str(epsilon)
-
-# define space adventure task with aquired configurations
-# set number of trials to the max number of actions
-space_advent = SpaceAdventure(conditions,
-                              outcome_likelihoods=confs,
-                              init_states=starts,
-                              runs=runs,
-                              mini_blocks=blocks,
-                              trials=3)
-
-# define the optimal agent, each with a different maximal planning depth
-agent = MFRL(confs,
-            runs=runs,
-            mini_blocks=blocks,
-            trials=3)
-
-agent.set_parameters(pars)
-
-# simulate experiment
-sim = SimulatorMFRL(space_advent, 
-                    agent, 
-                    runs=runs, 
-                    mini_blocks=blocks,
-                    trials=3)   # <- agent is internally always run for 3 trials!!!
-sim.simulate_experiment()
-
-simulations.append(sim)
-agents.append(agent)
-
-
-responses = sim.responses.clone()
-responses[torch.isnan(responses)] = 0
-responses = responses.long()
-resps.append(responses)
-
-outcomes = sim.outcomes
-
-points = costs[responses] + fuel[outcomes]
-points[outcomes<0] = 0
-performance.append(points.sum(-1))   # append sum of point gain/loss for each individual mini-block for given pl_depth
-
-simnames.append(simname)
-
-# # dump simulations to disk
-# write_pickle(obj=simulations, relnm='sim_' + simname + '.pckl')
 
   
 
@@ -270,6 +204,7 @@ simnames.append(simname)
 
 # # dump simulations to disk
 # write_pickle(obj=simulations, relnm='sim_' + simname + '.pckl')    
+
 
 #%% store sim data
 sim_data = pd.DataFrame()
@@ -332,23 +267,6 @@ g.axes.flat[1].set_title("reversed order")
 plt.savefig('sim_' + simname + '_pointsplot', dpi=300)
 plt.savefig('sim_' + simname + '_pointsplot.svg', format="svg")
 
-
-#%% MF-RL parameter optimization: heatmap of final scores for each parameter combination
-sim_data2 = sim_data[sim_data['mini-block']==99].groupby('agent').mean()
-
-sim_data2.alpha = sim_data2.alpha.astype("category")
-sim_data2.epsilon = sim_data2.epsilon.astype("category")
-
-heatmap1_data = pd.pivot_table(sim_data2, values='points', 
-                     index=['alpha'], 
-                     columns='epsilon')
-fig, ax = plt.subplots(figsize=(10,8))
-sns.heatmap(heatmap1_data, ax = ax, cbar_kws={'label': 'final point score'})
-# ax.set_xticklabels([str("%.2f" % round(i,2)) for i in epsilons])
-# ax.set_yticklabels([str("%.1f" % round(i,2)) for i in alphas])
-
-fig.savefig('sim_MF-RL-score-heatmap.png', dpi=300)
-fig.savefig('sim_MF-RL-score-heatmap.svg', type="svg")
 
 
 #%% Plot GainMEAN per Phase and Depth
