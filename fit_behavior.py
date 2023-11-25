@@ -7,8 +7,8 @@ import seaborn as sns
 from os import getcwd, path
 
 # local classes and methods
-from pybefit.agents import VISAT  # value iteration agent for SAT
-from pybefit.inference import NormalGammaDiscreteDepth  # A hierarchical parametric model with discrete variables
+from pybefit.agents.torch import VISAT  # value iteration agent for SAT
+from pybefit.inference.pyro import NormalGammaDiscreteDepth  # A hierarchical parametric model with discrete variables
 from utils import errorplot, load_and_format_behavioural_data
 
 # set data directory as relative path from this files directory
